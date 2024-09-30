@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // Import the http package
+import 'package:mediconnect/models/user.dart';
+import 'package:mediconnect/repository/user_repository.dart';
 import 'dart:convert'; // For encoding the data
 import 'package:mediconnect/screens/common_screens/create_account%20&%20login/create_account/widgets/CreateAccountButton.dart';
 import 'package:mediconnect/screens/patient_screens/home/home_page/HomePage.dart';
 import '../../widgets/facebook_sign_in_button.dart';
 import '../../widgets/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:math';
 
 class CreateAccountScaffold extends StatefulWidget {
   const CreateAccountScaffold({super.key});
@@ -23,7 +27,8 @@ class _CreateAccountScaffoldState extends State<CreateAccountScaffold> {
   final _birthdayController = TextEditingController();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-
+  final userRepository = UserRepository();
+  String? _deviceId;
   Future<void> createAccount() async {
     // The URL of your API endpoint
     const String apiUrl = 'http://192.168.43.214:8000/users/create/';
@@ -75,6 +80,30 @@ class _CreateAccountScaffoldState extends State<CreateAccountScaffold> {
     }
   }
 
+  Future getDeviceId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? deviceId = prefs.getString('device_id');
+
+    if (deviceId == null) {
+      // Generate a random unique ID (you can use any approach here)
+      deviceId = _generateRandomId();
+      await prefs.setString('device_id', deviceId);
+    }
+
+    _deviceId = deviceId;
+  }
+
+  String _generateRandomId() {
+    var random = Random();
+    return List.generate(16, (index) => random.nextInt(9).toString()).join();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getDeviceId();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,7 +117,6 @@ class _CreateAccountScaffoldState extends State<CreateAccountScaffold> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-
                     TextField(
                       controller: _emailController,
                       decoration: const InputDecoration(
@@ -105,12 +133,19 @@ class _CreateAccountScaffoldState extends State<CreateAccountScaffold> {
                       ),
                       obscureText: true,
                     ),
-                   
                     const SizedBox(height: 30),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         print('Creating account...');
-                        createAccount();
+
+                        await userRepository.createUser(
+                            user: jsonEncode(<String, String>{
+                          'User_ID':
+                              DateTime.now().millisecondsSinceEpoch.toString(),
+                          'Email': _emailController.text,
+                          'Password': _passwordController.text,
+                          'Device_ID': _deviceId!
+                        }));
                       },
                       child: const Text('Create Account'),
                     ),
