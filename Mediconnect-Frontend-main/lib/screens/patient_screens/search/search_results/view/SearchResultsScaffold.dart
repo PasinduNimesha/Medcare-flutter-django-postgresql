@@ -19,22 +19,17 @@ class SearchResultsScaffold extends StatelessWidget {
     this.time,
   });
 
-  Future<List<dynamic>> fetchSearchResults() async {
-    final uri = Uri.parse('https://your-backend-url.com/api/search-results/');
-    final response = await http.post(
+  Future<Map<String, dynamic>> fetchSearchResults() async {
+    print(doctorName);
+    final uri = Uri.parse('http://10.0.2.2:8000/api/doctors/$doctorName/get-all-data');
+    final response = await http.get(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'doctor_name': doctorName,
-        'disease': disease,
-        'medical_center': medicalCenter,
-        'date': date,
-        'time': time,
-      }),
     );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body)['results'];
+    final data = jsonDecode(response.body);
+    if (data['status'] == "success") {
+      
+      return data['data'];
     } else {
       throw Exception('Failed to load search results');
     }
@@ -46,7 +41,7 @@ class SearchResultsScaffold extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Search Results'),
       ),
-      body: FutureBuilder<List<dynamic>>(
+      body: FutureBuilder<Map<String,dynamic>>(
         future: fetchSearchResults(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -59,10 +54,10 @@ class SearchResultsScaffold extends StatelessWidget {
 
           final results = snapshot.data!;
           return ListView.builder(
-            itemCount: results.length,
+            itemCount: 1,
             itemBuilder: (context, index) {
-              final result = results[index];
-              return ResultCard(result: result);
+             
+              return ResultCard(result: results);
             },
           );
         },

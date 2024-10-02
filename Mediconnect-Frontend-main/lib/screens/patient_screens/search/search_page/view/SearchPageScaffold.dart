@@ -25,12 +25,12 @@ class _SearchPageScaffoldState extends State<SearchPagescaffold> {
   // Fetch doctors and medical centers from backend
   Future<List<Map<String, dynamic>>> _fetchDoctors() async {
     final response =
-        await http.get(Uri.parse('http://10.0.2.2:8000/api/patient'));
+        await http.get(Uri.parse('http://10.0.2.2:8000/api/doctors'));
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return (data['data'] as List).map((doctor) {
         return {
-          'Doctor_ID': doctor['Patient_ID'].toString(), // Ensure ID is a string
+          'Doctor_ID': doctor['Doctor_ID'].toString(), // Ensure ID is a string
           'Doctor_Name': 'Dr. ' + doctor['First_name'] + ' ' + doctor['Last_name']
         };
       }).toList();

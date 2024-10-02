@@ -43,15 +43,24 @@ def create_user(request):
     hashed_password = make_password(data['Password'])
 
     # Create the new user
-    User.objects.create(
-        User_ID=data['User_ID'],
-        Email=data['Email'],
-        Password=hashed_password,
-        Device_ID=data['Device_ID'],
-        Role=""
-    )
+    # User.objects.create(
+    #     User_ID=data['User_ID'],
+    #     Email=data['Email'],
+    #     Password=hashed_password,
+    #     Device_ID=data['Device_ID'],
+    # )
+    serializer = UserSerializer(data=data)
 
-    return Response({"status": "success", "message": "User created successfully"}, status=status.HTTP_201_CREATED)
+    if serializer.is_valid():
+        User.objects.create(
+            User_ID=data['User_ID'],
+            Email=data['Email'],
+            Password=hashed_password,
+            Device_ID=data['Device_ID'],
+        )
+        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_201_CREATED)
+
+    return Response({"status": "error", "message": "Error Creating Hospital"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
@@ -62,3 +71,21 @@ def get_user_by_id(request, pk):
         return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return Response({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['PUT'])
+def update_user_registration_status(request, pk):
+    try:
+        # Retrieve the user by their User_ID (pk)
+        user = User.objects.get(User_ID=pk)
+    except User.DoesNotExist:
+        return Response({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Update the IsRegistered field to True
+    user.IsRegistered = True
+    user.save()
+
+    serializer = UserSerializer(user)
+    return Response(
+        {"status": "success", "data": serializer.data, "message": "User registration status updated to True"},
+        status=status.HTTP_200_OK)

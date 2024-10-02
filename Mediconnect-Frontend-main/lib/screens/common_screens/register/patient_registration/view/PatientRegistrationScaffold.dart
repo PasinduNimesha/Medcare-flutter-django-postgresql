@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:mediconnect/repository/patient_repository.dart';
+import 'package:mediconnect/repository/user_repository.dart';
 import 'package:mediconnect/screens/common_screens/register/widgets/address_fields.dart';
 import 'package:mediconnect/screens/common_screens/register/widgets/birthday_field.dart';
 import 'package:mediconnect/screens/common_screens/register/widgets/name_fields.dart';
 import 'package:mediconnect/screens/common_screens/register/widgets/nic_field.dart';
-import 'package:mediconnect/screens/common_screens/register/widgets/register_button.dart';
 import 'package:mediconnect/screens/common_screens/welcome/widgets/BackgroundImage.dart';
 import '../widgets/widgets.dart';
 import 'package:mediconnect/screens/patient_screens/home/home_page/HomePage.dart'; // Import the Home Screen after registration
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PatientRegistrationScaffold extends StatefulWidget {
   const PatientRegistrationScaffold({super.key});
@@ -34,6 +35,7 @@ class _PatientRegistrationScaffoldState
   final _nicController = TextEditingController();
   final _birthdayController = TextEditingController();
   final patientRepository = PatientRepository();
+  final userRepository = UserRepository();
   // Variables for dropdowns and time pickers
   TimeOfDay? _breakfastTime;
   TimeOfDay? _lunchTime;
@@ -93,6 +95,20 @@ class _PatientRegistrationScaffoldState
     );
   }
 
+  String? _userId;
+
+  Future getUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userId = prefs.getString('user_id');
+    _userId = userId;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getUserId();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -148,81 +164,54 @@ class _PatientRegistrationScaffoldState
                       },
                     ),
                     const SizedBox(height: 20),
-                    // RegisterButton(
-                    //   onPressed: () async {
-                    //     if (_formKey.currentState!.validate()) {
-                    //       var response = await patientRepository.createPatient(
-                    //           patient: jsonEncode({
-                    //         "User_ID": 1727725290446,
-                    //         "First_name": _firstNameController.text,
-                    //         "Last_name": _lastNameController.text,
-                    //         "Other_name": _otherNamesController.text,
-                    //         "Birthday": _birthdayController.text,
-                    //         "Street_No": _streetNoController.text,
-                    //         "Street_Name": _streetNameController.text,
-                    //         "City": _cityController.text,
-                    //         "Postal_Code": _postalCodeController.text,
-                    //         "NIC": _nicController.text,
-                    //         "Breakfast_time": _breakfastTime?.format(context),
-                    //         "Lunch_time": _lunchTime?.format(context),
-                    //         "Dinner_time": _dinnerTime?.format(context)
-                    //       }));
-                    //        if (response['status'] == "success") {
-                    //         // Navigator.push(
-                    //         //   context,
-                    //         //   MaterialPageRoute(
-                    //         //       builder: (context) =>
-                    //         //           const RoleSelectionScreen()),
-                    //         // );
-                    //         print("success");
-                    //       }
-                    //       if (response['status'] == "error") {
-                    //         _showErrorDialog(context, response['message']);
-                    //       }
-                    //     }
-                    //   },
-                    //   selectedRole: 'Patient',
-                    // ),
-
                     ElevatedButton(
                         onPressed: () async {
-                          // if (_formKey.currentState!.validate()) {
-                          //   var response =
-                          //       await patientRepository.createPatient(
-                          //           patient: jsonEncode(<String, String>{
-                          //     "User_ID": "1727718402396",
-                          //     "First_name": _firstNameController.text,
-                          //     "Last_name": _lastNameController.text,
-                          //     "Other_name": _otherNamesController.text,
-                          //     "Birthday": _birthdayController.text,
-                          //     "Street_No": _streetNoController.text,
-                          //     "Street_Name": _streetNameController.text,
-                          //     "City": _cityController.text,
-                          //     "Postal_Code": _postalCodeController.text,
-                          //     "NIC": _nicController.text,
-                          //     "Breakfast_time": _breakfastTime!.format(context).toString(),
-                          //     "Lunch_time": _lunchTime!.format(context).toString(),
-                          //     "Dinner_time": _dinnerTime!.format(context).toString()
-                          //   }));
-                          //   if (response['status'] == "success") {
-                          //     // Navigator.push(
-                          //     //   context,
-                          //     //   MaterialPageRoute(
-                          //     //       builder: (context) =>
-                          //     //           const RoleSelectionScreen()),
-                          //     // );
-                          //     print("success");
-                          //   }
-                          //   if (response['status'] == "error") {
-                          //     _showErrorDialog(context, response['message']);
-                          //   }
-                          // }
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                     HomePage()),
-                          );
+                          if (_formKey.currentState!.validate()) {
+                            var response =
+                                await patientRepository.createPatient(
+                                    patient: jsonEncode(<String, dynamic>{
+                              "User_ID": _userId,
+                              "First_name": _firstNameController.text,
+                              "Last_name": _lastNameController.text,
+                              "Other_name": _otherNamesController.text,
+                              "Birthday": _birthdayController.text,
+                              "Street_No": _streetNoController.text,
+                              "Street_Name": _streetNameController.text,
+                              "City": _cityController.text,
+                              "Postal_Code": _postalCodeController.text,
+                              "NIC": _nicController.text,
+                              "Breakfast_time":
+                                  _breakfastTime!.format(context).toString(),
+                              "Lunch_time":
+                                  _lunchTime!.format(context).toString(),
+                              "Dinner_time":
+                                  _dinnerTime!.format(context).toString()
+                            }));
+                            if (response['status'] == "success") {
+                              var res = await userRepository.changeRegStatus(id: _userId!);
+                              print(res);
+                              if (res['status'] == "success") {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => HomePage()),
+                                );
+                              }
+                              if (response['status'] == "error") {
+                                _showErrorDialog(context, response['message']);
+                              }
+                              
+                            }
+                            if (response['status'] == "error") {
+                              _showErrorDialog(context, response['message']);
+                            }
+                          }
+                          // Navigator.push(
+                          //     context,
+                          //     MaterialPageRoute(
+                          //         builder: (context) =>
+                          //              HomePage()),
+                          //   );
                         },
                         child: const Text("Register"))
                   ],

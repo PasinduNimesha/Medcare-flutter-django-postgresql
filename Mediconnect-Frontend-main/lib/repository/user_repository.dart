@@ -41,4 +41,23 @@ class UserRepository {
       print("Error: " + error.toString());
     }
   }
+
+   Future<dynamic> changeRegStatus({required String id}) async {
+    try {
+      var response = await http.put(
+          Uri.parse('http://10.0.2.2:8000/api/users/$id/update-registration/'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8'
+          },
+          body: jsonEncode(<String, String>{"empty": "empty"}));
+      final data = jsonDecode(response.body);
+      if (data == null) {
+        return {"status": "error", "message": "Something went wrong"};
+      } else {
+        return data;
+      }
+    } catch (error) {
+      print("Error: " + error.toString());
+    }
+  }
 }

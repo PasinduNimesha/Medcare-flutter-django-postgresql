@@ -7,6 +7,7 @@ import 'package:mediconnect/screens/common_screens/role_selection/RoleSelection.
 import 'package:mediconnect/screens/patient_screens/home/home_page/HomePage.dart';
 import '../../widgets/widgets.dart';
 //import '../role_selection/role_selection_screen.dart'; // Import role selection screen
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScaffold extends StatefulWidget {
   const LoginScaffold({super.key});
@@ -20,7 +21,7 @@ class _LoginScaffoldState extends State<LoginScaffold> {
   final _passwordController = TextEditingController();
   final userRepository = UserRepository();
 
-void _showErrorDialog(BuildContext context, String message) {
+  void _showErrorDialog(BuildContext context, String message) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -39,6 +40,12 @@ void _showErrorDialog(BuildContext context, String message) {
       },
     );
   }
+
+  Future setUserID(String id) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_id', id);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,7 +78,7 @@ void _showErrorDialog(BuildContext context, String message) {
                           mainAxisSize: MainAxisSize
                               .min, // Reduce the box size based on content
                           children: [
-                             TextField(
+                            TextField(
                               style: const TextStyle(
                                   color:
                                       Colors.white), // White text for contrast
@@ -88,7 +95,7 @@ void _showErrorDialog(BuildContext context, String message) {
                               controller: _emailController,
                             ),
                             const SizedBox(height: 20),
-                           TextField(
+                            TextField(
                               obscureText: true,
                               style: const TextStyle(color: Colors.white),
                               decoration: const InputDecoration(
@@ -112,14 +119,26 @@ void _showErrorDialog(BuildContext context, String message) {
                                   "Password": _passwordController.text
                                 }));
                                 if (response['status'] == "success") {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => HomePage()),
-                                  );
+                                  //print(response['data']['User_ID']);
+                                  setUserID(response['data']['User_ID'].toString());
+                                  if (response['data']['IsRegistered']) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => HomePage()),
+                                    );
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              const RoleSelectionScreen()),
+                                    );
+                                  }
                                 }
                                 if (response['status'] == "error") {
-                                  _showErrorDialog(context, response['message']);
+                                  _showErrorDialog(
+                                      context, response['message']);
                                 }
                               },
                               style: ElevatedButton.styleFrom(
@@ -140,26 +159,26 @@ void _showErrorDialog(BuildContext context, String message) {
                             const CreateAnAccount(),
                             const SizedBox(height: 20),
                             // Bypass Login Button
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const RoleSelectionScreen()),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blueAccent,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 50, vertical: 15),
-                              ),
-                              child: const Text(
-                                'Bypass Login',
-                                style: TextStyle(
-                                    fontSize: 16, color: Colors.white),
-                              ),
-                            ),
+                            // ElevatedButton(
+                            //   onPressed: () {
+                            //     Navigator.push(
+                            //       context,
+                            //       MaterialPageRoute(
+                            //           builder: (context) =>
+                            //               const RoleSelectionScreen()),
+                            //     );
+                            //   },
+                            //   style: ElevatedButton.styleFrom(
+                            //     backgroundColor: Colors.blueAccent,
+                            //     padding: const EdgeInsets.symmetric(
+                            //         horizontal: 50, vertical: 15),
+                            //   ),
+                            //   child: const Text(
+                            //     'Bypass Login',
+                            //     style: TextStyle(
+                            //         fontSize: 16, color: Colors.white),
+                            //   ),
+                            // ),
                           ],
                         ),
                       ),

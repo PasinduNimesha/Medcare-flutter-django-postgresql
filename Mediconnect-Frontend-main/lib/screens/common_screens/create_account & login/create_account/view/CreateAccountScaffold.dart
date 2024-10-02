@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http; // Import the http package
-import 'package:mediconnect/models/user.dart';
 import 'package:mediconnect/repository/user_repository.dart';
-import 'dart:convert'; // For encoding the data
-import 'package:mediconnect/screens/common_screens/create_account%20&%20login/create_account/widgets/CreateAccountButton.dart';
+import 'dart:convert';
 import 'package:mediconnect/screens/common_screens/create_account%20&%20login/login/LoginScreen.dart';
-import 'package:mediconnect/screens/common_screens/role_selection/RoleSelection.dart';
-import 'package:mediconnect/screens/patient_screens/home/home_page/HomePage.dart';
 import '../../widgets/facebook_sign_in_button.dart';
 import '../../widgets/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -121,7 +116,7 @@ void _showErrorDialog(BuildContext context, String message) {
                         if(response['status'] == "success") {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
+                            MaterialPageRoute(builder: (context) => const LoginScreen()),
                           );
                         }
                         if(response['status'] == "error"){

@@ -3,6 +3,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
 
+from doctor_visit_hospital.models import DoctorVisitHospital
+from doctor_visit_hospital.serializers import DoctorVisitHospitalSerializer
+from hospital.models import Hospital
+from hospital.serializers import HospitalSerializer
 from user.models import User
 from .models import Doctor
 from .serializers import DoctorSerializer
@@ -19,7 +23,8 @@ def create_doctor(request):
 
     # Check if a doctor already exists for this user
     if Doctor.objects.filter(User_ID=data['User_ID']).exists():
-        return Response({"status": "error", "message": "Doctor already exists for this user"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"status": "error", "message": "Doctor already exists for this user"},
+                        status=status.HTTP_400_BAD_REQUEST)
 
     # Create a new doctor
     doctor = Doctor.objects.create(
@@ -43,7 +48,8 @@ def create_doctor(request):
 
     # Serialize and return the response
     serializer = DoctorSerializer(doctor)
-    return Response({"status": "success", "data": serializer.data, "message": "Doctor created successfully"}, status=status.HTTP_201_CREATED)
+    return Response({"status": "success", "data": serializer.data, "message": "Doctor created successfully"},
+                    status=status.HTTP_201_CREATED)
 
 
 # Get a doctor by ID
@@ -65,8 +71,19 @@ def get_all_doctors(request):
     return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+def get_doctor_with_visit(request, pk):
+    doctor = Doctor.objects.get(Doctor_ID=pk)
+    visits = DoctorVisitHospital.objects.filter(Doctor_ID=pk)
+    d_serializer = DoctorSerializer(doctor, many=False)
+    v_serializer = DoctorVisitHospitalSerializer(visits, many=True)
+
+    return Response({"status": "success", "data": {"doctor": d_serializer.data, 'visits': v_serializer.data}},
+                    status=status.HTTP_200_OK)
+
+
 # Update a doctor
-@api_view(['PUT'])
+@api_view(['PATCH'])
 def update_doctor(request, pk):
     try:
         doctor = Doctor.objects.get(Doctor_ID=pk)

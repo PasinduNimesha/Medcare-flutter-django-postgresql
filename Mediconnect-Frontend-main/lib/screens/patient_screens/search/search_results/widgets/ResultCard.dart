@@ -24,7 +24,7 @@ class ResultCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Doctor: ${result['doctor']}',
+                    'Doctor: ${result['doctor']['First_name']}',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -35,17 +35,17 @@ class ResultCard extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             Text(
-              'Specialty: ${result['specialty']}',
+              'Specialty: ${result['doctor']['Specialization']}',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 5),
             Text(
-              'Medical Center: ${result['medicalCenter']}',
+              'Medical Center: dss',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 5),
             Text(
-              'Availability: ${result['availability']}',
+              'Availability: ${result['doctor']['Availability']== true ? "Available":"Not Available"}',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 10),
@@ -57,7 +57,7 @@ class ResultCard extends StatelessWidget {
                     Icon(Icons.star, color: Colors.yellow[700]),
                     const SizedBox(width: 4),
                     Text(
-                      '${result['rating']}',
+                      '0',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -71,7 +71,7 @@ class ResultCard extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => AppointmentPage(
-                          doctorName: result['doctor'],
+                          doctorName: result['doctor']['First_name'],
                         ),
                       ),
                     );
