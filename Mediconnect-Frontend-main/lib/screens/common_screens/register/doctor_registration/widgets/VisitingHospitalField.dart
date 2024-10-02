@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:mediconnect/repository/hospital_repository.dart';
 import 'package:mediconnect/screens/common_screens/register/doctor_registration/widgets/HospitalDropdown.dart';
 
 class VisitingHospitalField extends StatefulWidget {
@@ -14,8 +17,14 @@ class _VisitingHospitalFieldState extends State<VisitingHospitalField> {
 
   TimeOfDay? appointedStartTime;
   TimeOfDay? appointedEndTime;
+  final TextEditingController appointedCountController =
+      TextEditingController();
+
   TimeOfDay? appointlessStartTime;
   TimeOfDay? appointlessEndTime;
+  final TextEditingController appointlessCountController =
+      TextEditingController();
+  final hospitalRepository = HospitalRepository();
 
   final List<String> daysOfWeek = [
     'Mon',
@@ -81,10 +90,26 @@ class _VisitingHospitalFieldState extends State<VisitingHospitalField> {
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 if (hospitalNameController.text.isNotEmpty &&
                     hospitalLocationController.text.isNotEmpty) {
+                  var response = await hospitalRepository.createHospital(
+                      hospital: jsonEncode(<String, dynamic>{
+                    "Location": hospitalLocationController.text,
+                    "Rating": 0,
+                    "Name": hospitalNameController.text
+                  }));
+
+                  if(response['status'] == "success") {
                   Navigator.of(context).pop();
+                  }
+                  if (response['status'] == "error") {
+                    // _showErrorDialog(context, response['message']);
+                    SnackBar(
+                      content: Text(response['message'].toString()),
+                    );
+                  }
+
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -150,68 +175,127 @@ class _VisitingHospitalFieldState extends State<VisitingHospitalField> {
           ),
           const SizedBox(height: 10),
 
-          // Appointed Patients Time Row
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-            child: Row(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+            child: Column(
               children: [
-                const Text("Appointed Patients:"),
-                Flexible(
-                  child: TextButton(
-                    onPressed: () =>
-                        _pickTime(context, (time) => appointedStartTime = time),
-                    child: Text(
-                      appointedStartTime != null
-                          ? appointedStartTime!.format(context)
-                          : 'Start Time',
-                    ),
-                  ),
+                const Row(children: [
+                  Text("Appointed Patients"),
+                ]),
+                Row(
+                  children: [
+                    const Text("Start Time: "),
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(15, 0, 10, 0),
+                        child: TextButton(
+                          onPressed: () => _pickTime(
+                              context, (time) => appointedStartTime = time),
+                          child: Text(
+                            appointedStartTime != null
+                                ? appointedStartTime!.format(context)
+                                : 'Start Time',
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
                 ),
-                const Text(" To"),
-                Flexible(
-                  child: TextButton(
-                    onPressed: () =>
-                        _pickTime(context, (time) => appointedEndTime = time),
-                    child: Text(
-                      appointedEndTime != null
-                          ? appointedEndTime!.format(context)
-                          : 'End Time',
-                    ),
-                  ),
+                Row(
+                  children: [
+                    const Text("End Time: "),
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(15, 0, 10, 0),
+                        child: TextButton(
+                          onPressed: () => _pickTime(
+                              context, (time) => appointedEndTime = time),
+                          child: Text(
+                            appointedEndTime != null
+                                ? appointedEndTime!.format(context)
+                                : 'Select End Time',
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
                 ),
+                Row(
+                  children: [
+                    const Text("Patient Count: "),
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(15, 0, 10, 0),
+                        child: TextFormField(
+                          controller: appointedCountController,
+                        ),
+                      ),
+                    )
+                  ],
+                )
               ],
             ),
           ),
-
           // Appointless Patients Time Row
+          const SizedBox(height: 20),
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 3),
-            child: Row(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+            child: Column(
               children: [
-                const Text("Appointless Patients:"),
-                Flexible(
-                  child: TextButton(
-                    onPressed: () => _pickTime(
-                        context, (time) => appointlessStartTime = time),
-                    child: Text(
-                      appointlessStartTime != null
-                          ? appointlessStartTime!.format(context)
-                          : 'Start Time',
-                    ),
-                  ),
+                const Row(children: [
+                  Text("Appointless Patients"),
+                ]),
+                Row(
+                  children: [
+                    const Text("Start Time: "),
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(15, 0, 10, 0),
+                        child: TextButton(
+                          onPressed: () => _pickTime(
+                              context, (time) => appointlessStartTime = time),
+                          child: Text(
+                            appointlessStartTime != null
+                                ? appointlessStartTime!.format(context)
+                                : 'Select Start Time',
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
                 ),
-                const Text(" To"),
-                Flexible(
-                  child: TextButton(
-                    onPressed: () =>
-                        _pickTime(context, (time) => appointlessEndTime = time),
-                    child: Text(
-                      appointlessEndTime != null
-                          ? appointlessEndTime!.format(context)
-                          : 'End Time',
-                    ),
-                  ),
+                Row(
+                  children: [
+                    const Text("End Time: "),
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(15, 0, 10, 0),
+                        child: TextButton(
+                          onPressed: () => _pickTime(
+                              context, (time) => appointlessEndTime = time),
+                          child: Text(
+                            appointlessEndTime != null
+                                ? appointlessEndTime!.format(context)
+                                : 'Select End Time',
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
                 ),
+                Row(
+                  children: [
+                    const Text("Patient Count: "),
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(15, 0, 10, 0),
+                        child: TextFormField(
+                          controller: appointlessCountController,
+                        ),
+                      ),
+                    )
+                  ],
+                )
               ],
             ),
           ),

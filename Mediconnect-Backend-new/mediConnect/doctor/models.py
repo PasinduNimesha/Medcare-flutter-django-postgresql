@@ -19,9 +19,9 @@ class Doctor(models.Model):
     NIC = models.CharField(max_length=20)
     Specialization = models.CharField(max_length=255)
 
-    Reg_num = models.BigIntegerField()
+    Reg_num = models.CharField()
     Specialization = models.CharField(max_length=255)
-    Rating = models.FloatField()
-    Current_HOS = models.CharField(max_length=255)
+    Rating = models.FloatField(null=True)
+    Current_HOS = models.CharField(max_length=255, null=True)
     Availability = models.BooleanField(default=True)
-    ID_photo = models.BigIntegerField()
+    ID_photo = models.BigIntegerField(null=True)

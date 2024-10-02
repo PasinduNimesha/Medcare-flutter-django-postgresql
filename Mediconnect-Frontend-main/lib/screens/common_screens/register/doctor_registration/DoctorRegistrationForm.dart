@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:mediconnect/repository/doctor_repository.dart';
 import 'package:mediconnect/screens/common_screens/register/doctor_registration/widgets/DoctorIDField.dart';
 import 'package:mediconnect/screens/common_screens/register/doctor_registration/widgets/DoctorIDUpload.dart';
 import 'package:mediconnect/screens/common_screens/register/doctor_registration/widgets/SpecializationDropdown.dart';
 import 'package:mediconnect/screens/common_screens/register/doctor_registration/widgets/VisitingHospitalField.dart';
 import 'package:mediconnect/screens/common_screens/register/widgets/register_button.dart';
+import 'package:mediconnect/screens/patient_screens/home/home_page/HomePage.dart';
 import '../../../common_screens/register/widgets/address_fields.dart';
 import '../../../common_screens/register/widgets/birthday_field.dart';
 import '../../../common_screens/register/widgets/name_fields.dart';
@@ -34,6 +38,8 @@ class _DoctorRegistrationFormState extends State<DoctorRegistrationForm> {
   // Variables for dropdowns
   String? _selectedSpecialization;
   List<VisitingHospitalField> _hospitalFields = [VisitingHospitalField()]; // Initialize with one hospital field
+
+  final doctorRepository = DoctorRepository();
 
   // Function to add a new hospital field
   void _addHospitalField() {
@@ -106,13 +112,39 @@ class _DoctorRegistrationFormState extends State<DoctorRegistrationForm> {
                       onPressed: _addHospitalField,
                     ),
                     const SizedBox(height: 20),
-                    RegisterButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          // Handle doctor registration
+                    ElevatedButton(
+                      onPressed: () async{
+                        var response = await doctorRepository.createDoctor(doctor: jsonEncode(<String, dynamic>{
+                          'User_ID' : '1727719663032',
+                          'First_name' : _firstNameController.text,
+                          'Last_name' : _lastNameController.text,
+                          'Other_name' : _otherNamesController.text,
+                          'Birthday' : _birthdayController.text,
+                          'Street_No' : _streetNoController.text,
+                          'Street_Name' : _streetNameController.text,
+                          'City' : _cityController.text,
+                          'Postal_Code' : _postalCodeController.text,
+                          'NIC' : _nicController.text,
+                          'Specialization' : _selectedSpecialization,
+                          'Reg_num' : _doctorIDController.text,
+                          'ID_photo' : 123
+                        }));
+                        if (response['status'] == "success") {
+                          
+                          const SnackBar(content: Text("Success"));
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    HomePage()),
+                          );
+
                         }
-                      }, 
-                      selectedRole: "Doctor",
+                        if (response['status'] == "error") {
+                          SnackBar(content: Text(response['message']));
+                        }
+                      },
+                      child: const Text('Register'),
                     ),
                   ],
                 ),

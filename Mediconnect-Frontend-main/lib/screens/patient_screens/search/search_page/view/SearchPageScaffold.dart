@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'package:mediconnect/screens/patient_screens/search/search_page/widgets/widgets.dart';
 import 'package:mediconnect/screens/patient_screens/search/search_results/SearchResults.dart';
 import 'package:mediconnect/widgets/bottom_nav_bar/PatientBottomNavBar.dart';
-//import '../../view/view.dart';
 
 class SearchPagescaffold extends StatefulWidget {
   const SearchPagescaffold({super.key});
@@ -15,8 +14,8 @@ class SearchPagescaffold extends StatefulWidget {
 }
 
 class _SearchPageScaffoldState extends State<SearchPagescaffold> {
-  String? selectedDoctor;
-  String? selectedMedicalCenter;
+  String? selectedDoctorId;
+  String? selectedMedicalCenterId;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   String? disease;
@@ -24,21 +23,34 @@ class _SearchPageScaffoldState extends State<SearchPagescaffold> {
   final TextEditingController diseaseController = TextEditingController();
 
   // Fetch doctors and medical centers from backend
-  Future<List<String>> _fetchDoctors() async {
-    final response = await http.get(Uri.parse('http://127.0.0.1:8000/'));
+  Future<List<Map<String, dynamic>>> _fetchDoctors() async {
+    final response =
+        await http.get(Uri.parse('http://10.0.2.2:8000/api/patient'));
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((doctor) => doctor['name'] as String).toList();
+      final data = jsonDecode(response.body);
+      return (data['data'] as List).map((doctor) {
+        return {
+          'Doctor_ID': doctor['Patient_ID'].toString(), // Ensure ID is a string
+          'Doctor_Name': 'Dr. ' + doctor['First_name'] + ' ' + doctor['Last_name']
+        };
+      }).toList();
     } else {
       throw Exception('Failed to load doctors');
     }
   }
 
-  Future<List<String>> _fetchMedicalCenters() async {
-    final response = await http.get(Uri.parse('https://your-backend-url.com/api/medical-centers'));
+  Future<List<Map<String, dynamic>>> _fetchMedicalCenters() async {
+    final response =
+        await http.get(Uri.parse('http://10.0.2.2:8000/api/hospitals/'));
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((center) => center['name'] as String).toList();
+      final data = jsonDecode(response.body);
+      return (data['data'] as List).map((center) {
+        return {
+          'Hospital_ID':
+              center['Hospital_ID'].toString(), // Ensure ID is a string
+          'Hospital_Name': center['Name']+' - '+center['Location']
+        };
+      }).toList();
     } else {
       throw Exception('Failed to load medical centers');
     }
@@ -76,10 +88,13 @@ class _SearchPageScaffoldState extends State<SearchPagescaffold> {
       context,
       MaterialPageRoute(
         builder: (context) => SearchResultsPage(
-          doctorName: selectedDoctor,
+          doctorName: selectedDoctorId, // Use the selected doctor ID here
           disease: disease,
-          medicalCenter: selectedMedicalCenter,
-          date: selectedDate != null ? DateFormat('yyyy-MM-dd').format(selectedDate!) : null,
+          medicalCenter:
+              selectedMedicalCenterId, // Use the selected medical center ID
+          date: selectedDate != null
+              ? DateFormat('yyyy-MM-dd').format(selectedDate!)
+              : null,
           time: selectedTime?.format(context),
         ),
       ),
@@ -97,22 +112,70 @@ class _SearchPageScaffoldState extends State<SearchPagescaffold> {
         child: Column(
           children: [
             // Search by Doctor Name
-            FutureBuilder<List<String>>(
+            FutureBuilder<List<Map<String, dynamic>>>(
               future: _fetchDoctors(),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                } else if (snapshot.hasError) {
-                  return const Text('Error loading doctors');
+                 if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Text('No doctors available');
                 } else {
-                  return DropdownField(
-                    labelText: 'Search by Doctor Name',
-                    items: snapshot.data!,
-                    onChanged: (String? value) {
-                      setState(() {
-                        selectedDoctor = value;
-                      });
-                    },
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: 'Search by Doctor Name',
+                      ),
+                      items: snapshot.data!.map((doctor) {
+                        return DropdownMenuItem<String>(
+                          value: doctor['Doctor_ID'], // The ID is stored as value
+                          child: Text(
+                              doctor['Doctor_Name']!), // The name is displayed
+                        );
+                      }).toList(),
+                      onChanged: (String? value) {
+                        setState(() {
+                          selectedDoctorId =
+                              value; // Store the selected doctor ID
+                        });
+                      },
+                      value: selectedDoctorId,
+                    ),
+                  );
+                }
+              },
+            ),
+            const SizedBox(height: 10),
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: _fetchMedicalCenters(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Text('No medical centers available');
+                } else {
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: 'Search by Medical Center',
+                      ),
+                      items: snapshot.data!.map((center) {
+                        return DropdownMenuItem<String>(
+                          value:
+                              center['Hospital_ID'], // The ID is stored as value
+                          child: Text(
+                              center['Hospital_Name']!), // The name is displayed
+                        );
+                      }).toList(),
+                      onChanged: (String? value) {
+                        setState(() {
+                          selectedMedicalCenterId =
+                              value; // Store the selected medical center ID
+                        });
+                      },
+                      value: selectedMedicalCenterId,
+                    ),
                   );
                 }
               },
@@ -132,30 +195,7 @@ class _SearchPageScaffoldState extends State<SearchPagescaffold> {
                 });
               },
             ),
-            const SizedBox(height: 10),
-
-            // Search by Medical Center/Hospital
-            FutureBuilder<List<String>>(
-              future: _fetchMedicalCenters(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                } else if (snapshot.hasError) {
-                  return const Text('Error loading medical centers');
-                } else {
-                  return DropdownField(
-                    labelText: 'Search by Medical Center',
-                    items: snapshot.data!,
-                    onChanged: (String? value) {
-                      setState(() {
-                        selectedMedicalCenter = value;
-                      });
-                    },
-                  );
-                }
-              },
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 40),
 
             // Select Date
             DatePickerField(
@@ -178,10 +218,12 @@ class _SearchPageScaffoldState extends State<SearchPagescaffold> {
                 style: TextStyle(color: Colors.black),
               ),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 150, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 150, vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.0),
-                  side: const BorderSide(color: Colors.black, width: 2.0), // Black border
+                  side: const BorderSide(
+                      color: Colors.black, width: 2.0), // Black border
                 ),
               ),
             ),

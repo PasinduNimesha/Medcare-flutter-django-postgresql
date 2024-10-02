@@ -52,6 +52,12 @@ def get_patient_by_id(request, pk):
     except Patient.DoesNotExist:
         return Response({"status": "error", "message": "Patient not found"}, status=status.HTTP_404_NOT_FOUND)
 
+@api_view(['GET'])
+def get_all_patients(request):
+    hospitals = Patient.objects.all()
+    serializer = PatientSerializer(hospitals, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+
 
 # Update a patient
 @api_view(['PUT'])
