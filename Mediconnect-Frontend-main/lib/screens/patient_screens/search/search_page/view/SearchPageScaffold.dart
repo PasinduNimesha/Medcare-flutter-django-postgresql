@@ -163,7 +163,7 @@ class _SearchPageScaffoldState extends State<SearchPagescaffold> {
                       items: snapshot.data!.map((center) {
                         return DropdownMenuItem<String>(
                           value:
-                              center['Hospital_ID'], // The ID is stored as value
+                              center['Hospital_Name'], // The ID is stored as value
                           child: Text(
                               center['Hospital_Name']!), // The name is displayed
                         );

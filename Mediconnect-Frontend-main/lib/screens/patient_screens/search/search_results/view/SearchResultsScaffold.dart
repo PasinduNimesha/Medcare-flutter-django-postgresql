@@ -57,7 +57,7 @@ class SearchResultsScaffold extends StatelessWidget {
             itemCount: 1,
             itemBuilder: (context, index) {
              
-              return ResultCard(result: results);
+              return ResultCard(result: results, hospital: medicalCenter!,);
             },
           );
         },

@@ -3,10 +3,11 @@ import 'package:mediconnect/screens/patient_screens/search/book_appointments/Boo
 
 class ResultCard extends StatelessWidget {
   final Map<String, dynamic> result;
+  final String hospital;
 
   const ResultCard({
     super.key,
-    required this.result,
+    required this.result, required this.hospital,
   });
 
   @override
@@ -40,7 +41,7 @@ class ResultCard extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             Text(
-              'Medical Center: dss',
+              'Medical Center: $hospital',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 5),
