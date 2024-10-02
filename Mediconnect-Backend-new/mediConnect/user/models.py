@@ -7,3 +7,4 @@ class User(models.Model):
     Email = models.EmailField()
     Password = models.CharField(max_length=255)
     Device_ID = models.CharField(max_length=255)
+    Role = models.CharField(max_length=255)

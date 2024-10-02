@@ -1,9 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:mediconnect/screens/common_screens/register/doctor_registration/widgets/HospitalDropdown.dart';
 
-class VisitingHospitalField extends StatelessWidget {
+class VisitingHospitalField extends StatefulWidget {
+  @override
+  State<VisitingHospitalField> createState() => _VisitingHospitalFieldState();
+}
+
+class _VisitingHospitalFieldState extends State<VisitingHospitalField> {
   final TextEditingController hospitalController = TextEditingController();
-  TimeOfDay? visitingTime;
-  final List<String> daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  final TextEditingController hospitalNameController = TextEditingController();
+  final TextEditingController hospitalLocationController =
+      TextEditingController();
+
+  TimeOfDay? appointedStartTime;
+  TimeOfDay? appointedEndTime;
+  TimeOfDay? appointlessStartTime;
+  TimeOfDay? appointlessEndTime;
+
+  final List<String> daysOfWeek = [
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun'
+  ];
+
   final Map<String, bool> daySelected = {
     'Mon': false,
     'Tue': false,
@@ -14,14 +37,68 @@ class VisitingHospitalField extends StatelessWidget {
     'Sun': false,
   };
 
-  Future<void> _pickTime(BuildContext context) async {
+  String? _selectedHospital;
+
+  Future<void> _pickTime(
+      BuildContext context, ValueChanged<TimeOfDay?> onTimePicked) async {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
     );
     if (pickedTime != null) {
-      visitingTime = pickedTime;
+      setState(() {
+        onTimePicked(pickedTime);
+      });
     }
+  }
+
+  Future<void> _openAddHospitalDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add Hospital'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: hospitalNameController,
+                decoration: const InputDecoration(labelText: 'Hospital Name'),
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: hospitalLocationController,
+                decoration:
+                    const InputDecoration(labelText: 'Hospital Location'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (hospitalNameController.text.isNotEmpty &&
+                    hospitalLocationController.text.isNotEmpty) {
+                  Navigator.of(context).pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please fill in all fields'),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -29,20 +106,31 @@ class VisitingHospitalField extends StatelessWidget {
     return Material(
       child: Column(
         children: [
-          TextFormField(
-            controller: hospitalController,
-            decoration: const InputDecoration(labelText: 'Visiting Hospital'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter the hospital name';
-              }
-              return null;
-            },
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: HospitalDropdown(
+                    selectedHospital: _selectedHospital,
+                    onHospitalChanged: (hospital) {
+                      setState(() {
+                        _selectedHospital = hospital;
+                      });
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: _openAddHospitalDialog,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 10),
           Wrap(
-            spacing: 5.0, // Spacing between elements
-            runSpacing: 5.0, // Spacing between rows
+            spacing: 5.0,
+            runSpacing: 5.0,
             children: daysOfWeek.map((day) {
               return Row(
                 mainAxisSize: MainAxisSize.min,
@@ -50,7 +138,9 @@ class VisitingHospitalField extends StatelessWidget {
                   Checkbox(
                     value: daySelected[day],
                     onChanged: (bool? value) {
-                      daySelected[day] = value!;
+                      setState(() {
+                        daySelected[day] = value!;
+                      });
                     },
                   ),
                   Text(day),
@@ -59,9 +149,71 @@ class VisitingHospitalField extends StatelessWidget {
             }).toList(),
           ),
           const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () => _pickTime(context),
-            child: Text(visitingTime != null ? visitingTime!.format(context) : 'Pick Time'),
+
+          // Appointed Patients Time Row
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+            child: Row(
+              children: [
+                const Text("Appointed Patients:"),
+                Flexible(
+                  child: TextButton(
+                    onPressed: () =>
+                        _pickTime(context, (time) => appointedStartTime = time),
+                    child: Text(
+                      appointedStartTime != null
+                          ? appointedStartTime!.format(context)
+                          : 'Start Time',
+                    ),
+                  ),
+                ),
+                const Text(" To"),
+                Flexible(
+                  child: TextButton(
+                    onPressed: () =>
+                        _pickTime(context, (time) => appointedEndTime = time),
+                    child: Text(
+                      appointedEndTime != null
+                          ? appointedEndTime!.format(context)
+                          : 'End Time',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Appointless Patients Time Row
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 3),
+            child: Row(
+              children: [
+                const Text("Appointless Patients:"),
+                Flexible(
+                  child: TextButton(
+                    onPressed: () => _pickTime(
+                        context, (time) => appointlessStartTime = time),
+                    child: Text(
+                      appointlessStartTime != null
+                          ? appointlessStartTime!.format(context)
+                          : 'Start Time',
+                    ),
+                  ),
+                ),
+                const Text(" To"),
+                Flexible(
+                  child: TextButton(
+                    onPressed: () =>
+                        _pickTime(context, (time) => appointlessEndTime = time),
+                    child: Text(
+                      appointlessEndTime != null
+                          ? appointlessEndTime!.format(context)
+                          : 'End Time',
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

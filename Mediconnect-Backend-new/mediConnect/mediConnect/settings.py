@@ -82,10 +82,11 @@ WSGI_APPLICATION = 'mediConnect.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'MediConnectDB',
+        'NAME': 'postgres',
         'USER': 'postgres',
-        'PASSWORD': 'kavindya123',
-        'HOST': 'localhost'
+        'PASSWORD': 'mediconnect.DB017',
+        'HOST': 'mediconnect.c9o2aky687e4.eu-north-1.rds.amazonaws.com',
+        'PORT': '5432'
     }
 }
 

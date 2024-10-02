@@ -4,6 +4,8 @@ import 'package:mediconnect/models/user.dart';
 import 'package:mediconnect/repository/user_repository.dart';
 import 'dart:convert'; // For encoding the data
 import 'package:mediconnect/screens/common_screens/create_account%20&%20login/create_account/widgets/CreateAccountButton.dart';
+import 'package:mediconnect/screens/common_screens/create_account%20&%20login/login/LoginScreen.dart';
+import 'package:mediconnect/screens/common_screens/role_selection/RoleSelection.dart';
 import 'package:mediconnect/screens/patient_screens/home/home_page/HomePage.dart';
 import '../../widgets/facebook_sign_in_button.dart';
 import '../../widgets/widgets.dart';
@@ -29,57 +31,7 @@ class _CreateAccountScaffoldState extends State<CreateAccountScaffold> {
   final _lastNameController = TextEditingController();
   final userRepository = UserRepository();
   String? _deviceId;
-  Future<void> createAccount() async {
-    // The URL of your API endpoint
-    const String apiUrl = 'http://192.168.43.214:8000/users/create/';
-
-    try {
-      // Make the POST request
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, dynamic>{
-          'Username': _usernameController.text,
-          'Role': _roleController.text,
-          'Email': _emailController.text,
-          'Password': _passwordController.text,
-          'NIC': _nicController.text,
-          'Device_ID': _deviceIdController.text,
-          'Birthday': _birthdayController.text,
-          'First_name': _firstNameController.text,
-          'Last_name': _lastNameController.text,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        // If the server returns an OK response, handle success
-        final data = jsonDecode(response.body);
-        print('Account created successfully: $data');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created successfully!')),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
-      } else {
-        // If the server returns an error response
-        print('Failed to create account: ${response.body}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to create account')),
-        );
-      }
-    } catch (e) {
-      // Handle any errors that occur during the request
-      print('Error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred')),
-      );
-    }
-  }
-
+ 
   Future getDeviceId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? deviceId = prefs.getString('device_id');
@@ -98,6 +50,25 @@ class _CreateAccountScaffoldState extends State<CreateAccountScaffold> {
     return List.generate(16, (index) => random.nextInt(9).toString()).join();
   }
 
+void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Create Account Error'), 
+          content: Text(message),
+          actions: [
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
   @override
   void initState() {
     super.initState();
@@ -138,7 +109,7 @@ class _CreateAccountScaffoldState extends State<CreateAccountScaffold> {
                       onPressed: () async {
                         print('Creating account...');
 
-                        await userRepository.createUser(
+                       var response = await userRepository.createUser(
                             user: jsonEncode(<String, String>{
                           'User_ID':
                               DateTime.now().millisecondsSinceEpoch.toString(),
@@ -146,6 +117,16 @@ class _CreateAccountScaffoldState extends State<CreateAccountScaffold> {
                           'Password': _passwordController.text,
                           'Device_ID': _deviceId!
                         }));
+
+                        if(response['status'] == "success") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
+                          );
+                        }
+                        if(response['status'] == "error"){
+                          _showErrorDialog(context, response['message']);
+                        }
                       },
                       child: const Text('Create Account'),
                     ),

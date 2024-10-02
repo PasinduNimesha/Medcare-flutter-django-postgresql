@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediconnect/repository/patient_repository.dart';
 import 'package:mediconnect/screens/common_screens/register/widgets/address_fields.dart';
 import 'package:mediconnect/screens/common_screens/register/widgets/birthday_field.dart';
 import 'package:mediconnect/screens/common_screens/register/widgets/name_fields.dart';
@@ -32,7 +33,7 @@ class _PatientRegistrationScaffoldState
   final _postalCodeController = TextEditingController();
   final _nicController = TextEditingController();
   final _birthdayController = TextEditingController();
-
+  final patientRepository = PatientRepository();
   // Variables for dropdowns and time pickers
   TimeOfDay? _breakfastTime;
   TimeOfDay? _lunchTime;
@@ -102,7 +103,8 @@ class _PatientRegistrationScaffoldState
         children: [
           const BackgroundImage(), // Background Image
           Padding(
-            padding: const EdgeInsets.all(16.0), // Use Padding instead of BlurredBox
+            padding:
+                const EdgeInsets.all(16.0), // Use Padding instead of BlurredBox
             child: Form(
               key: _formKey,
               child: SingleChildScrollView(
@@ -146,14 +148,83 @@ class _PatientRegistrationScaffoldState
                       },
                     ),
                     const SizedBox(height: 20),
-                    RegisterButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          _registerUser();
-                        }
-                      },
-                      selectedRole: 'Patient',
-                    ),
+                    // RegisterButton(
+                    //   onPressed: () async {
+                    //     if (_formKey.currentState!.validate()) {
+                    //       var response = await patientRepository.createPatient(
+                    //           patient: jsonEncode({
+                    //         "User_ID": 1727725290446,
+                    //         "First_name": _firstNameController.text,
+                    //         "Last_name": _lastNameController.text,
+                    //         "Other_name": _otherNamesController.text,
+                    //         "Birthday": _birthdayController.text,
+                    //         "Street_No": _streetNoController.text,
+                    //         "Street_Name": _streetNameController.text,
+                    //         "City": _cityController.text,
+                    //         "Postal_Code": _postalCodeController.text,
+                    //         "NIC": _nicController.text,
+                    //         "Breakfast_time": _breakfastTime?.format(context),
+                    //         "Lunch_time": _lunchTime?.format(context),
+                    //         "Dinner_time": _dinnerTime?.format(context)
+                    //       }));
+                    //        if (response['status'] == "success") {
+                    //         // Navigator.push(
+                    //         //   context,
+                    //         //   MaterialPageRoute(
+                    //         //       builder: (context) =>
+                    //         //           const RoleSelectionScreen()),
+                    //         // );
+                    //         print("success");
+                    //       }
+                    //       if (response['status'] == "error") {
+                    //         _showErrorDialog(context, response['message']);
+                    //       }
+                    //     }
+                    //   },
+                    //   selectedRole: 'Patient',
+                    // ),
+
+                    ElevatedButton(
+                        onPressed: () async {
+                          // if (_formKey.currentState!.validate()) {
+                          //   var response =
+                          //       await patientRepository.createPatient(
+                          //           patient: jsonEncode(<String, String>{
+                          //     "User_ID": "1727718402396",
+                          //     "First_name": _firstNameController.text,
+                          //     "Last_name": _lastNameController.text,
+                          //     "Other_name": _otherNamesController.text,
+                          //     "Birthday": _birthdayController.text,
+                          //     "Street_No": _streetNoController.text,
+                          //     "Street_Name": _streetNameController.text,
+                          //     "City": _cityController.text,
+                          //     "Postal_Code": _postalCodeController.text,
+                          //     "NIC": _nicController.text,
+                          //     "Breakfast_time": _breakfastTime!.format(context).toString(),
+                          //     "Lunch_time": _lunchTime!.format(context).toString(),
+                          //     "Dinner_time": _dinnerTime!.format(context).toString()
+                          //   }));
+                          //   if (response['status'] == "success") {
+                          //     // Navigator.push(
+                          //     //   context,
+                          //     //   MaterialPageRoute(
+                          //     //       builder: (context) =>
+                          //     //           const RoleSelectionScreen()),
+                          //     // );
+                          //     print("success");
+                          //   }
+                          //   if (response['status'] == "error") {
+                          //     _showErrorDialog(context, response['message']);
+                          //   }
+                          // }
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                     HomePage()),
+                          );
+                        },
+                        child: const Text("Register"))
                   ],
                 ),
               ),
