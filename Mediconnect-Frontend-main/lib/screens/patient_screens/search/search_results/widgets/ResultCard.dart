@@ -4,10 +4,10 @@ import 'package:mediconnect/screens/patient_screens/search/book_appointments/Boo
 class ResultCard extends StatelessWidget {
   final Map<String, dynamic> result;
   final String hospital;
-
+final Map<String, dynamic> searchData; 
   const ResultCard({
     super.key,
-    required this.result, required this.hospital,
+    required this.result, required this.hospital, required this.searchData,
   });
 
   @override
@@ -25,7 +25,7 @@ class ResultCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Doctor: ${result['doctor']['First_name']}',
+                    "Doctor: ${result['doctor']['First_name']} ${result['doctor']['Last_name']} ${result['doctor']['Other_name']}",
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -58,7 +58,7 @@ class ResultCard extends StatelessWidget {
                     Icon(Icons.star, color: Colors.yellow[700]),
                     const SizedBox(width: 4),
                     Text(
-                      '0',
+                      "${result['doctor']['Rating']}",
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -73,6 +73,8 @@ class ResultCard extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (context) => AppointmentPage(
                           doctorName: result['doctor']['First_name'],
+                          searchData: searchData,
+                          hospital: hospital,
                         ),
                       ),
                     );

@@ -7,6 +7,7 @@ class SearchResultsPage extends StatelessWidget {
   final String? medicalCenter;
   final String? date;
   final String? time;
+  final Map<String, dynamic> searchData;  
 
   const SearchResultsPage({
     super.key,
@@ -14,7 +15,7 @@ class SearchResultsPage extends StatelessWidget {
     this.disease,
     this.medicalCenter,
     this.date,
-    this.time,
+    this.time, required this.searchData,
   });
 
   @override
@@ -25,6 +26,7 @@ class SearchResultsPage extends StatelessWidget {
       medicalCenter: medicalCenter,
       date: date,
       time: time,
+      searchData: searchData,
     );
   }
 }

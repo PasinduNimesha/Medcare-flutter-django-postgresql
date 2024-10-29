@@ -5,10 +5,12 @@ import 'package:mediconnect/screens/patient_screens/search/book_appointments/wid
 
 class BookAppointmentsscaffold extends StatefulWidget {
   final String doctorName;
+  final Map<String, dynamic> searchData; 
+  final String hospital;
 
   const BookAppointmentsscaffold({
     super.key,
-    required this.doctorName,
+    required this.doctorName, required this.searchData, required this.hospital,
   });
 
   @override
@@ -68,6 +70,8 @@ class _BookAppointmentsScaffoldState extends State<BookAppointmentsscaffold> {
         });
       },
       onPlaceAppointment: placeAppointment,
+      searchData: widget.searchData,
+      hospital: widget.hospital,
     );
   }
 }

@@ -1,12 +1,20 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-class AppointmentDetailsWidget extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:mediconnect/repository/appointment_repository.dart';
+import 'package:mediconnect/screens/patient_screens/home/home_page/HomePage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class AppointmentDetailsWidget extends StatefulWidget {
   final String doctorName;
   final int? selectedNumber;
   final ValueChanged<int?> onSelectNumber;
   final ValueChanged<String> onConsultationTypeChanged;
   final ValueChanged<String> onNoteChanged;
   final VoidCallback onPlaceAppointment;
+  final String hospital;
+  final Map<String, dynamic> searchData;
 
   const AppointmentDetailsWidget({
     super.key,
@@ -16,13 +24,58 @@ class AppointmentDetailsWidget extends StatelessWidget {
     required this.onConsultationTypeChanged,
     required this.onNoteChanged,
     required this.onPlaceAppointment,
+    required this.hospital,
+    required this.searchData,
   });
+
+  @override
+  State<AppointmentDetailsWidget> createState() =>
+      _AppointmentDetailsWidgetState();
+}
+
+class _AppointmentDetailsWidgetState extends State<AppointmentDetailsWidget> {
+  Map<String, dynamic>? visitData;
+  final AppointmentRepository appointmentRepository = AppointmentRepository();
+  int? token_no;
+  @override
+  void initState() {
+    super.initState();
+    fetchDoctorVisit();
+    getUserId();
+  }
+
+  String? _userId;
+
+  Future getUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userId = prefs.getString('user_id');
+    _userId = userId;
+  }
+
+  Future<Map<String, dynamic>> fetchDoctorVisit() async {
+    print("${widget.searchData['DoctorId']}");
+    final uri = Uri.parse(
+        "http://10.0.2.2:8000/api/visit/${widget.searchData['DoctorId']}/${widget.searchData['HospitalId']}");
+    final response = await http.get(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+    );
+    final data = jsonDecode(response.body);
+    if (data['status'] == "success") {
+      setState(() {
+        visitData = data['data'];
+      });
+      return data['data'];
+    } else {
+      throw Exception('Failed to load search results');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Make an Appointment with $doctorName'),
+        title: Text('Make an Appointment with ${widget.doctorName}'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -30,13 +83,13 @@ class AppointmentDetailsWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Doctor name: Dr. $doctorName',
+              'Doctor name: Dr. ${widget.doctorName}',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Medical Center: Medicare - Kiribathgoda',
-              style: TextStyle(fontSize: 16),
+            Text(
+              'Medical Center: ${widget.hospital}',
+              style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 8),
             Row(
@@ -54,8 +107,8 @@ class AppointmentDetailsWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Date: 2024/06/25',
+            Text(
+              'Date: ${widget.searchData['Date']}',
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 16),
@@ -65,15 +118,27 @@ class AppointmentDetailsWidget extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             DropdownButton<int>(
-              value: selectedNumber,
-              onChanged: onSelectNumber,
-              items: <int>[1, 2, 3, 4, 5].map<DropdownMenuItem<int>>((int value) {
-                return DropdownMenuItem<int>(
-                  value: value,
-                  child: Text(value.toString()),
-                );
-              }).toList(),
-            ),
+                value: token_no,
+                onChanged: (int? newValue) {
+                  setState(() {
+                    token_no = newValue;
+                  });
+                },
+                items: visitData != null
+                    ? List.generate(
+                            visitData?['AP_Count'], (index) => index + 1)
+                        .map<DropdownMenuItem<int>>((int value) {
+                        return DropdownMenuItem<int>(
+                          value: value,
+                          child: Text(value.toString()),
+                        );
+                      }).toList()
+                    : [1, 2, 3].map<DropdownMenuItem<int>>((int value) {
+                        return DropdownMenuItem<int>(
+                          value: value,
+                          child: Text(value.toString()),
+                        );
+                      }).toList()),
             const SizedBox(height: 16),
             const Text(
               'Approx. time',
@@ -94,14 +159,15 @@ class AppointmentDetailsWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
-                  onPressed: () => onConsultationTypeChanged('In-person'),
+                  onPressed: () =>
+                      widget.onConsultationTypeChanged('In-person'),
                   child: const Text('In-person'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 116, 198, 236),
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () => onConsultationTypeChanged('Online'),
+                  onPressed: () => widget.onConsultationTypeChanged('Online'),
                   child: const Text('Online'),
                 ),
               ],
@@ -118,19 +184,47 @@ class AppointmentDetailsWidget extends StatelessWidget {
                   border: OutlineInputBorder(),
                   hintText: 'John Doe - Chest Pain',
                 ),
-                onChanged: onNoteChanged,
+                onChanged: widget.onNoteChanged,
               ),
             ),
             const SizedBox(height: 16),
             Center(
               child: ElevatedButton(
-                onPressed: onPlaceAppointment,
+                onPressed: () async {
+                  var response = await appointmentRepository.createAppointment(
+                      appointment: jsonEncode({
+                    "Patient_ID": 1,
+                    "Doctor_ID": widget.searchData['DoctorId'],
+                    "Start_time": visitData!['AP_Start_Time'].toString(),
+                    "End_time": visitData!['AP_End_Time'].toString(),
+                    "Date": widget.searchData['Date'].toString(),
+                    "Hospital_ID": widget.searchData['HospitalId'],
+                    "Disease": widget.searchData['Disease'],
+                    "Token_no": token_no
+                  }));
+                  if (response['status'] == "success") {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text(
+                              'Appointment Placed successfully')),
+                    );
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) =>  HomePage()));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text(
+                              'Error Making Appointment')),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize:
+                      const Size(double.infinity, 50), // Full-width button
+                ),
                 child: const Text(
                   'Place Appointment',
                   style: TextStyle(color: Colors.black),
-                ),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50), // Full-width button
                 ),
               ),
             ),

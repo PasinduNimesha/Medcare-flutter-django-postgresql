@@ -27,24 +27,18 @@ class _HomePageScaffoldState extends State<HomePageScaffold> {
   }
 
   Future<void> fetchData() async {
-    try {
-      final response = await http.get(Uri.parse(
-          'https://gist.githubusercontent.com/Madushansuriyabandara/b4b46ac4e1e90095759f3b7fb277c203/raw/b0fe08959d0b321f7afeb5fcb8189fdb97c0de8e/appointments.json'));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          appointments = data['appointments'];
-          isLoading = false;
-        });
-      } else {
-        throw Exception('Failed to load data');
-      }
-    } catch (e) {
-      print(e);
+    final response =
+        await http.get(Uri.parse('http://10.0.2.2:8000/api/appointments/'));
+        print(response.statusCode);
+    if (response.statusCode == 200) {
       setState(() {
         isLoading = false;
       });
+      final data = jsonDecode(response.body);
+      appointments = data['data'] as List;
+      print("${appointments[0]['Disease']}");
+    } else {
+      throw Exception('Failed to load doctors');
     }
   }
 
@@ -87,33 +81,33 @@ class _HomePageScaffoldState extends State<HomePageScaffold> {
                       itemBuilder: (context, index) {
                         final appointment = appointments[index];
                         return AppointmentButton(
-                          color: getAppointmentStatusColor(
-                              appointment['appointmentStatus']),
+                          color: appointment['Status'] == "Queued" ? Colors.yellow : Colors.red,
                           text:
-                              '${appointment['appointmentName']} - ${appointment['doctorName']}',
+                              "${appointment['Disease']} - Dr.${appointment['Doctor_ID']['First_name']}",
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AppointmentDetailsScreen(
-                                  appointmentName:
-                                      appointment['appointmentName'],
-                                  doctorName: appointment['doctorName'],
-                                  specialty: appointment['specialty'],
-                                  appointmentTime:
-                                      appointment['appointmentTime'],
-                                  appointmentDate:
-                                      appointment['appointmentDate'],
-                                  location: appointment['location'],
-                                  appointmentNumber:
-                                      appointment['appointmentNumber'],
-                                  currentNumber: appointment['currentNumber'],
-                                  turnTime: appointment['turnTime'],
-                                  appointmentStatus:
-                                      appointment['appointmentStatus'],
-                                ),
-                              ),
-                            );
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) => AppointmentDetailsScreen(
+                            //       appointmentName:
+                            //           appointment['appointmentName'],
+                            //       doctorName: appointment['doctorName'],
+                            //       specialty: appointment['specialty'],
+                            //       appointmentTime:
+                            //           appointment['appointmentTime'],
+                            //       appointmentDate:
+                            //           appointment['appointmentDate'],
+                            //       location: appointment['location'],
+                            //       appointmentNumber:
+                            //           appointment['appointmentNumber'],
+                            //       currentNumber: appointment['currentNumber'],
+                            //       turnTime: appointment['turnTime'],
+                            //       appointmentStatus:
+                            //           appointment['appointmentStatus'],
+                            //     ),
+                            //   ),
+                            // );
+                          
                           },
                         );
                       },

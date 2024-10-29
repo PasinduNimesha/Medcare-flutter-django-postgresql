@@ -9,6 +9,7 @@ class SearchResultsScaffold extends StatelessWidget {
   final String? medicalCenter;
   final String? date;
   final String? time;
+  final Map<String, dynamic> searchData; 
 
   const SearchResultsScaffold({
     super.key,
@@ -16,7 +17,7 @@ class SearchResultsScaffold extends StatelessWidget {
     this.disease,
     this.medicalCenter,
     this.date,
-    this.time,
+    this.time, required this.searchData,
   });
 
   Future<Map<String, dynamic>> fetchSearchResults() async {
@@ -57,7 +58,7 @@ class SearchResultsScaffold extends StatelessWidget {
             itemCount: 1,
             itemBuilder: (context, index) {
              
-              return ResultCard(result: results, hospital: medicalCenter!,);
+              return ResultCard(result: results, hospital: medicalCenter!, searchData: searchData,);
             },
           );
         },

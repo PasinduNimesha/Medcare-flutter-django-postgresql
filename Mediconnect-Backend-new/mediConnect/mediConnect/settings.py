@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'patient',
     'hospital',
     'doctor_visit_hospital',
+    'appointment',
     'rest_framework'
 
 ]
